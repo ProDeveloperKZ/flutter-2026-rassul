@@ -1,122 +1,248 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+import 'summary_card.dart';
+
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
-  // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
+  Widget build(BuildContext context) => MaterialApp(
+    title: 'Sign up',
+    theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal)),
+    home: const SignUpScreen(),
+  );
+}
+
+const groups = ['IT-2301', 'IT-2302', 'IT-2303', 'IT-2304', 'IT-2305'];
+
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key});
+  @override
+  State<SignUpScreen> createState() => _SignUpScreenState();
+}
+
+class _SignUpScreenState extends State<SignUpScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _name = TextEditingController();
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+  final _confirm = TextEditingController();
+  final _birthText = TextEditingController();
+  final _emailFocus = FocusNode();
+  String? _group;
+  DateTime? _birth;
+  bool _agreed = false;
+  bool _done = false;
+
+  @override
+  void dispose() {
+    for (final c in [_name, _email, _password, _confirm, _birthText]) {
+      c.dispose();
+    }
+    _emailFocus.dispose();
+    super.dispose();
   }
-}
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  void _dismissKeyboard(PointerDownEvent event) {
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
+  void _submit() {
+    if (_formKey.currentState!.validate()) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Account created')));
+      setState(() => _done = true);
+    }
+  }
 
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
+  Future<void> _pickBirthDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _birth ?? DateTime(2005, 1, 1),
+      firstDate: DateTime(1950),
+      lastDate: DateTime.now(),
+    );
+    if (date == null) return;
+    if (!mounted) return;
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _birth = date;
+      _birthText.text =
+          '${date.day.toString().padLeft(2, '0')}.'
+          '${date.month.toString().padLeft(2, '0')}.${date.year}';
+    });
+  }
+
+  void _startOver() {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    setState(() {
+      for (final c in [_name, _email, _password, _confirm, _birthText]) {
+        c.clear();
+      }
+      _group = null;
+      _birth = null;
+      _agreed = false;
+      _done = false;
     });
   }
 
   @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Sign up')),
+    body: _done
+        ? SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                SummaryCard(
+                  name: _name.text.trim(),
+                  email: _email.text.trim(),
+                  group: _group ?? '',
+                  birthDate: _birthText.text,
+                ),
+                TextButton(
+                  onPressed: _startOver,
+                  child: const Text('Start over'),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
+          )
+        : Form(
+            key: _formKey,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Create your account',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    key: const ValueKey('name'),
+                    controller: _name,
+                    decoration: const InputDecoration(labelText: 'Name'),
+                    textCapitalization: TextCapitalization.words,
+                    textInputAction: TextInputAction.next,
+                    onFieldSubmitted: (_) => _emailFocus.requestFocus(),
+                    onTapOutside: _dismissKeyboard,
+                    validator: (v) => (v ?? '').trim().length < 2
+                        ? 'Name must contain at least 2 characters'
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    key: const ValueKey('email'),
+                    controller: _email,
+                    focusNode: _emailFocus,
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      hintText: 'name@kbtu.kz',
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    autocorrect: false,
+                    textInputAction: TextInputAction.next,
+                    onTapOutside: _dismissKeyboard,
+                    validator: (v) {
+                      final email = (v ?? '').trim();
+                      final at = email.indexOf('@');
+                      final dot = email.indexOf('.', at + 1);
+                      if (at <= 0 ||
+                          dot <= at + 1 ||
+                          dot == email.length - 1 ||
+                          email.contains(' ') ||
+                          at != email.lastIndexOf('@')) {
+                        return 'Enter a valid email address';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    key: const ValueKey('password'),
+                    controller: _password,
+                    decoration: const InputDecoration(
+                      labelText: 'Password',
+                      helperText: 'At least 8 characters',
+                    ),
+                    obscureText: true,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    textInputAction: TextInputAction.next,
+                    onTapOutside: _dismissKeyboard,
+                    onChanged: (_) => setState(() {}),
+                    validator: (v) => (v ?? '').length < 8
+                        ? 'Password must contain at least 8 characters'
+                        : null,
+                  ),
+                  Text(
+                    '${_password.text.length} of 8',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    key: const ValueKey('confirm'),
+                    controller: _confirm,
+                    decoration: const InputDecoration(
+                      labelText: 'Confirm password',
+                    ),
+                    obscureText: true,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: _agreed ? (_) => _submit() : null,
+                    onTapOutside: _dismissKeyboard,
+                    validator: (v) => (v ?? '').isEmpty || v != _password.text
+                        ? 'Passwords do not match'
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    key: const ValueKey('group'),
+                    initialValue: _group,
+                    decoration: const InputDecoration(labelText: 'Group'),
+                    items: [
+                      for (final g in groups)
+                        DropdownMenuItem(value: g, child: Text(g)),
+                    ],
+                    onChanged: (g) => setState(() => _group = g),
+                    validator: (g) => g == null ? 'Choose a group' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    key: const ValueKey('birth'),
+                    controller: _birthText,
+                    readOnly: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Date of birth',
+                      suffixIcon: Icon(Icons.calendar_month),
+                    ),
+                    onTap: _pickBirthDate,
+                    onTapOutside: _dismissKeyboard,
+                    validator: (_) =>
+                        _birth == null ? 'Choose your date of birth' : null,
+                  ),
+                  const SizedBox(height: 8),
+                  CheckboxListTile(
+                    key: const ValueKey('agreed'),
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('I agree to the rules'),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    value: _agreed,
+                    onChanged: (v) => setState(() => _agreed = v ?? false),
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton(
+                    key: const ValueKey('submit'),
+                    onPressed: _agreed ? _submit : null,
+                    child: const Text('Sign up'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+  );
 }
